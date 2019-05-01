@@ -20,7 +20,8 @@ void set_cursor_on_view_map(int x, int y);
 int main(int argc, char** argv)
 {
 	char ch;
-	int x, y;
+	int x, y, xc, yc;
+	fire_result_t comp_fire;
 	int exit = 0;
 	int level = 1;
 	battle_map_t* user_map;
@@ -51,7 +52,9 @@ int main(int argc, char** argv)
 	}
 	printf("готово!\n");
 
-	printf("Выберите уровень сложности:\n  Безумный стрелок\n> Типичный противник\n  Нечестный бот");
+	printf("\nВыберите уровень сложности:\n");
+	printf("  Безумный стрелок\n> Типичный противник\n  Нечестный бот\n");
+	printf("\nENTER - выбор, ESC - выход");
 	while ((ch = getch()) != KEY_ENTER)
 	{
 		if (ch == KEY_ESC)
@@ -69,16 +72,16 @@ int main(int argc, char** argv)
 			case KEY_UP:
 				if (level > 0)
 				{
-					smart_print(0, 3 + level, ' ');
-					smart_print(0, 3 + --level, '>');
+					smart_print(0, 4 + level, ' ');
+					smart_print(0, 4 + --level, '>');
 				}
 				break;
 
 			case KEY_DOWN:
 				if (level < 2)
 				{
-					smart_print(0, 3 + level, ' ');
-					smart_print(0, 3 + ++level, '>');
+					smart_print(0, 4 + level, ' ');
+					smart_print(0, 4 + ++level, '>');
 				}
 				break;
 			}
@@ -142,19 +145,37 @@ int main(int argc, char** argv)
 					printf("ESC - выход");
 					while (getch() != KEY_ESC) {}
 					exit = 1;
+					break;
 				}
-				else
-				{
-					print_canvas(&computer_map_view->view, MAP_1_OFFSET_X, MAP_N_OFFSET_Y);
-					set_cursor_on_view_map(x, y);
-				}
+
+				print_canvas(&computer_map_view->view, MAP_1_OFFSET_X, MAP_N_OFFSET_Y);
+				set_cursor_on_view_map(x, y);
 				break;
 			case FIRE_MISS:
 				set_cursor_info(0, 100);
 				print_canvas(&computer_map_view->view, MAP_1_OFFSET_X, MAP_N_OFFSET_Y);
-				// todo: comp turn
-				print_canvas(&user_map_view->view, MAP_2_OFFSET_X, MAP_N_OFFSET_Y);
-				Sleep(500);
+
+				do
+				{
+					get_next_coord(user_map_view, level, &xc, &yc);
+					comp_fire = fire(user_map_view, xc, yc);
+					print_canvas(&user_map_view->view, MAP_2_OFFSET_X, MAP_N_OFFSET_Y);
+					
+					if (!is_alive(user_map_view))
+					{
+						system("cls");
+						printf("Поражение!\nВ следующий раз повезет больше!\n");
+						printf("Открытая карта противника - справа.\nESC - выход");
+						merge_view_with_map(computer_map_view);
+						print_canvas(&computer_map_view->view, 45, 1);
+						while (getch() != KEY_ESC) {}
+						exit = 1;
+						break;
+					}
+					
+					Sleep(500);
+				} while (comp_fire == FIRE_SUCCESS);
+				
 				set_cursor_on_view_map(x, y);
 				set_cursor_info(1, 100);
 				break;

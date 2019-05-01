@@ -6,6 +6,7 @@
 
 #define MAX_ATTEMPTS_PUT_SHIP 100
 #define MAX_ATTEMPTS_GENERATE_MAP 100
+#define MAX_ATTEMPTS_RANDOM_COORD 100
 
 typedef enum direction
 {
@@ -111,6 +112,8 @@ int inner_init_map(battle_map_t* map)
 							put_ship(map, x, y, x, y + length - 1);
 						}
 						break;
+					default:
+						break;
 					}
 					put = 1;
 					break;
@@ -163,6 +166,22 @@ void free_view(battle_map_view_t* view)
 	free(view);
 }
 
+void merge_view_with_map(battle_map_view_t* view)
+{
+	int x, y;
+	for (y = 0; y < BATTLE_MAP_SIZE_Y; ++y)
+	{
+		for (x = 0; x < BATTLE_MAP_SIZE_X; ++x)
+		{
+			if (view->linked_map->map.canvas[y][x] == BATTLE_MAP_SHIP
+				&& view->view.canvas[y][x] == BATTLE_MAP_EMPTY)
+			{
+				view->view.canvas[y][x] = BATTLE_MAP_SHIP;
+			}
+		}
+	}
+}
+
 const ship_t* find_ship(const battle_map_t* map, int x, int y)
 {
 	const ship_t* ret;
@@ -205,9 +224,14 @@ void process_damage(battle_map_view_t* view, int x, int y)
 	--view->ships_alive;
 }
 
+int available_cell(const canvas_t* canvas, int x, int y)
+{
+	return canvas->canvas[y][x] == BATTLE_MAP_EMPTY || canvas->canvas[y][x] == BATTLE_MAP_SHIP;
+}
+
 fire_result_t fire(battle_map_view_t* view, int x, int y)
 {
-	if (view->view.canvas[y][x] != BATTLE_MAP_EMPTY) return FIRE_DENY;
+	if (!available_cell(&view->view, x, y)) return FIRE_DENY;
 
 	switch (view->linked_map->map.canvas[y][x])
 	{
@@ -227,6 +251,55 @@ int is_alive(const battle_map_view_t* view)
 {
 	if (view->ships_alive > 0) return 1; // is alive
 	return 0; // not alive
+}
+
+void random_next_coord(const battle_map_view_t* view, int* x, int* y)
+{
+	int attempts = MAX_ATTEMPTS_RANDOM_COORD;
+
+	do
+	{
+		*x = random_int(0, BATTLE_MAP_SIZE_X - 1);
+		*y = random_int(0, BATTLE_MAP_SIZE_Y - 1);
+	} while (!available_cell(&view->view, *x, *y) && attempts--);
+
+	if (attempts < 0)
+	{
+		for (*y = 0; *y < BATTLE_MAP_SIZE_Y; ++*y)
+		{
+			for (*x = 0; *x < BATTLE_MAP_SIZE_X; ++*x)
+			{
+				if (available_cell(&view->view, *x, *y)) return;
+			}
+		}
+	}
+}
+
+void normal_next_coord(const battle_map_view_t* view, int* x, int* y)
+{
+
+}
+
+void dishonest_next_coord(const battle_map_view_t* view, int* x, int* y)
+{
+
+}
+
+void get_next_coord(const battle_map_view_t* view, complexity_t complexity, int* x, int* y)
+{
+	switch (complexity)
+	{
+	case COMPLEXITY_RANDOM:
+		random_next_coord(view, x, y);
+		break;
+	case COMPLEXITY_DISHONEST:
+		dishonest_next_coord(view, x, y);
+		break;
+	case COMPLEXITY_NORMAL:
+	default:
+		normal_next_coord(view, x, y);
+		break;		
+	}
 }
 
 void print_canvas(const canvas_t* canvas, int offset_x, int offset_y)

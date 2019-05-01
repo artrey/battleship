@@ -44,13 +44,23 @@ typedef enum fire_result
 	FIRE_SUCCESS,
 } fire_result_t;
 
+typedef enum complexity
+{
+	COMPLEXITY_RANDOM,
+	COMPLEXITY_NORMAL,
+	COMPLEXITY_DISHONEST,
+} complexity_t;
+
 battle_map_t* generate_random_map();
 void free_map(battle_map_t* map);
 
 battle_map_view_t* create_and_link_view(const battle_map_t* map, int empty_view);
 void free_view(battle_map_view_t* view);
+void merge_view_with_map(battle_map_view_t* view);
+
 fire_result_t fire(battle_map_view_t* view, int x, int y);
 int is_alive(const battle_map_view_t* view);
+void get_next_coord(const battle_map_view_t* view, complexity_t complexity, int* x, int* y);
 
 void print_canvas(const canvas_t* canvas, int offset_x, int offset_y);
 
