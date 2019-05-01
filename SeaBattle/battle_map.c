@@ -202,6 +202,7 @@ void process_damage(battle_map_view_t* view, int x, int y)
 			view->view.canvas[j][i] = BATTLE_MAP_MISS;
 		}
 	}
+	--view->ships_alive;
 }
 
 fire_result_t fire(battle_map_view_t* view, int x, int y)

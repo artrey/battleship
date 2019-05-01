@@ -136,10 +136,18 @@ int main(int argc, char** argv)
 			case FIRE_SUCCESS:
 				if (!is_alive(computer_map_view))
 				{
-					// todo: endgame, win
+					set_cursor_info(0, 100);
+					system("cls");
+					printf("Победа!\n*Тут должен быть салют*\n");
+					printf("ESC - выход");
+					while (getch() != KEY_ESC) {}
+					exit = 1;
 				}
-				print_canvas(&computer_map_view->view, MAP_1_OFFSET_X, MAP_N_OFFSET_Y);
-				set_cursor_on_view_map(x, y);
+				else
+				{
+					print_canvas(&computer_map_view->view, MAP_1_OFFSET_X, MAP_N_OFFSET_Y);
+					set_cursor_on_view_map(x, y);
+				}
 				break;
 			case FIRE_MISS:
 				set_cursor_info(0, 100);
@@ -186,10 +194,10 @@ int main(int argc, char** argv)
 		}
 	}
 
-	free_map(user_map);
-	free_map(computer_map);
 	free_view(user_map_view);
 	free_view(computer_map_view);
+	free_map(user_map);
+	free_map(computer_map);
 
 	return 0;
 }
