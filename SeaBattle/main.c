@@ -167,7 +167,7 @@ int main(int argc, char** argv)
 						printf("Поражение!\nВ следующий раз повезет больше!\n");
 						printf("Открытая карта противника - справа.\nESC - выход");
 						merge_view_with_map(computer_map_view);
-						print_canvas(&computer_map_view->view, 45, 1);
+						print_canvas(&computer_map_view->view, 40, 1);
 						while (getch() != KEY_ESC) {}
 						exit = 1;
 						break;

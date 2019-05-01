@@ -282,7 +282,17 @@ void normal_next_coord(const battle_map_view_t* view, int* x, int* y)
 
 void dishonest_next_coord(const battle_map_view_t* view, int* x, int* y)
 {
-
+	for (*y = 0; *y < BATTLE_MAP_SIZE_Y; ++*y)
+	{
+		for (*x = 0; *x < BATTLE_MAP_SIZE_X; ++*x)
+		{
+			if (view->linked_map->map.canvas[*y][*x] == BATTLE_MAP_SHIP
+				&& available_cell(&view->view, *x, *y))
+			{
+				return;
+			}
+		}
+	}
 }
 
 void get_next_coord(const battle_map_view_t* view, complexity_t complexity, int* x, int* y)
