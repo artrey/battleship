@@ -86,6 +86,7 @@ int inner_init_map(battle_map_t* map)
 							// check nearest cells
 							if (!validate_position(&map->map, x, y, x + length - 1, y)) continue;
 							put_ship(map, x, y, x + length - 1, y);
+							put = 1;
 						}
 						break;
 					case DIRECTION_UP:
@@ -94,6 +95,7 @@ int inner_init_map(battle_map_t* map)
 							// check nearest cells
 							if (!validate_position(&map->map, x, y - length + 1, x, y)) continue;
 							put_ship(map, x, y - length + 1, x, y);
+							put = 1;
 						}
 						break;
 					case DIRECTION_LEFT:
@@ -102,6 +104,7 @@ int inner_init_map(battle_map_t* map)
 							// check nearest cells
 							if (!validate_position(&map->map, x - length + 1, y, x, y)) continue;
 							put_ship(map, x - length + 1, y, x, y);
+							put = 1;
 						}
 						break;
 					case DIRECTION_DOWN:
@@ -110,12 +113,12 @@ int inner_init_map(battle_map_t* map)
 							// check nearest cells
 							if (!validate_position(&map->map, x, y, x, y + length - 1)) continue;
 							put_ship(map, x, y, x, y + length - 1);
+							put = 1;
 						}
 						break;
 					default:
 						break;
 					}
-					put = 1;
 					break;
 				}
 			}
@@ -277,7 +280,131 @@ void random_next_coord(const battle_map_view_t* view, int* x, int* y)
 
 void normal_next_coord(const battle_map_view_t* view, int* x, int* y)
 {
+	const ship_t* ship;
+	int i, j, damaged, p1, p2;
 
+	for (*y = 0; *y < BATTLE_MAP_SIZE_Y; ++*y)
+	{
+		for (*x = 0; *x < BATTLE_MAP_SIZE_X; ++*x)
+		{
+			if (view->view.canvas[*y][*x] == BATTLE_MAP_DAMAGE)
+			{
+				damaged = 0;
+				ship = find_ship(view->linked_map, *x, *y);
+				for (j = ship->y1; j < ship->y2 + 1; ++j)
+				{
+					for (i = ship->x1; i < ship->x2 + 1; ++i)
+					{
+						if (view->view.canvas[j][i] == BATTLE_MAP_DAMAGE) ++damaged;
+					}
+				}
+
+				if (damaged > 0 && damaged < ship->x2 - ship->x1 + ship->y2 - ship->y1 + 1)
+				{
+					// one cell
+					if (damaged == 1)
+					{
+						p1 = 0b1111;
+						p2 = 4;
+						
+						if (*x == 0 || !available_cell(&view->view, *x - 1, ship->y1))
+						{
+							p1 &= 0b0111;
+							--p2;
+						}
+						if (*x == BATTLE_MAP_SIZE_X - 1 || !available_cell(&view->view, *x + 1, ship->y1))
+						{
+							p1 &= 0b1011;
+							--p2;
+						}
+						if (*y == 0 || !available_cell(&view->view, ship->x1, *y - 1))
+						{
+							p1 &= 0b1101;
+							--p2;
+						}
+						if (*y == BATTLE_MAP_SIZE_Y - 1 || !available_cell(&view->view, ship->x1, *y + 1))
+						{
+							p1 &= 0b1110;
+							--p2;
+						}
+
+						p2 = random_int(0, p2 - 1);
+						for (i = 0; i < 4; ++i)
+						{
+							j = p1 >> (3 - i) & 1;
+							if (!j) continue;
+							if (p2-- == 0)
+							{
+								switch (i)
+								{
+								case 0: --*x; break;
+								case 1: ++*x; break;
+								case 2: --*y; break;
+								case 3: ++*y; break;
+								default: break;
+								}
+								break;
+							}
+						}
+					}
+					// horizontal
+					else if (ship->y1 == ship->y2)
+					{
+						*y = ship->y1;
+						p1 = p2 = *x;
+						for (i = ship->x1; i < ship->x2 + 1; ++i)
+						{
+							if (view->view.canvas[ship->y1][i] == BATTLE_MAP_DAMAGE)
+							{
+								p1 = i - 1;
+								break;
+							}
+						}
+						for (i = ship->x2; i > ship->x1 - 1; --i)
+						{
+							if (view->view.canvas[ship->y1][i] == BATTLE_MAP_DAMAGE)
+							{
+								p2 = i + 1;
+								break;
+							}
+						}
+						if (p1 < 0 || !available_cell(&view->view, p1, ship->y1)) *x = p2;
+						else if (p2 >= BATTLE_MAP_SIZE_X || !available_cell(&view->view, p2, ship->y1)) *x = p1;
+						else *x = random_bool() ? p1 : p2;
+					}
+					// vertical
+					else if (ship->x1 == ship->x2)
+					{
+						*x = ship->x1;
+						p1 = p2 = *y;
+						for (i = ship->y1; i < ship->y2 + 1; ++i)
+						{
+							if (view->view.canvas[i][ship->x1] == BATTLE_MAP_DAMAGE)
+							{
+								p1 = i - 1;
+								break;
+							}
+						}
+						for (i = ship->y2; i > ship->y1 - 1; --i)
+						{
+							if (view->view.canvas[i][ship->x1] == BATTLE_MAP_DAMAGE)
+							{
+								p2 = i + 1;
+								break;
+							}
+						}
+						if (p1 < 0 || !available_cell(&view->view, ship->x1, p1)) *y = p2;
+						else if (p2 >= BATTLE_MAP_SIZE_Y || !available_cell(&view->view, ship->x1, p2)) *y = p1;
+						else *y = random_bool() ? p1 : p2;
+					}
+
+					return;
+				}
+			}
+		}
+	}
+
+	random_next_coord(view, x, y);
 }
 
 void dishonest_next_coord(const battle_map_view_t* view, int* x, int* y)

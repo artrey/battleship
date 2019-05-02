@@ -95,7 +95,6 @@ int main(int argc, char** argv)
 
 	print_canvas(&computer_map_view->view, MAP_1_OFFSET_X, MAP_N_OFFSET_Y);
 	print_canvas(&user_map_view->view, MAP_2_OFFSET_X, MAP_N_OFFSET_Y);
-	print_canvas(&computer_map_view->linked_map->map, 60, MAP_N_OFFSET_Y);
 
 	x = 4, y = 4;
 	set_cursor_on_view_map(x, y);
@@ -121,7 +120,6 @@ int main(int argc, char** argv)
 
 					print_canvas(&computer_map_view->view, MAP_1_OFFSET_X, MAP_N_OFFSET_Y);
 					print_canvas(&user_map_view->view, MAP_2_OFFSET_X, MAP_N_OFFSET_Y);
-					print_canvas(&computer_map_view->linked_map->map, 60, MAP_N_OFFSET_Y);
 					
 					set_cursor_on_view_map(x, y);
 					set_cursor_info(1, 100);

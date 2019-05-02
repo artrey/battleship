@@ -14,6 +14,11 @@ void init_randomizer()
 
 int random_int(int min, int max)
 {
-	int range = abs(max - min);
+	int range = abs(max - min) + 1;
 	return min + rand() % range;
+}
+
+int random_bool()
+{
+	return random_int(0, 1);
 }
