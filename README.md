@@ -1,1 +1,1 @@
-sea-battle
+Console game "Battleship" in C
